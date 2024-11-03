@@ -1,37 +1,60 @@
-"""
-I will learn how to use sqlite3 database system
-mainly using the SQLMODEL
-Library mainly
-Here i can just make "uv sync"
-And then i can start using sqlmodel easily
-for now here is no code
-
-"""
-
-from typing import Optional
-
-from sqlmodel import Field, SQLModel
-from sqlmodel import create_engine
-from sqlmodel import Session
+from sqlmodel import Field, Session, SQLModel
+from sqlmodel import create_engine, select
 
 
 class Hero(SQLModel, table=True):
-
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     name: str
     secret_name: str
-    age: Optional[int] = None
+    age: int | None = None
 
 
-hero_1 = Hero(name="Deadpond", secret_name="Dive Wilson")
-hero_2 = Hero(name="Spider-Boy", secret_name="Pedro Parqueador")
-hero_3 = Hero(name="Rusty-Man", secret_name="Tommy Sharp", age=48)
+sqlite_file_name = "database.db"
+sqlite_url = f"sqlite:///{sqlite_file_name}"
 
-engine = create_engine("sqlite:///database.db")
-SQLModel.metadata.create_all(engine)
+engine = create_engine(sqlite_url)
 
-with Session(engine) as session:
-    session.add(hero_1)
-    session.add(hero_2)
-    session.add(hero_3)
-    session.commit()
+
+def create_db_and_tables():
+    SQLModel.metadata.create_all(engine)
+
+
+def create_heroes():
+    hero_1 = Hero(name="Deadpond", secret_name="Dive Wilson")
+    hero_2 = Hero(name="Spider-Boy", secret_name="Pedro Parqueador")
+    hero_3 = Hero(name="Rusty-Man", secret_name="Tommy Sharp", age=48)
+
+    with Session(engine) as session:
+        session.add(hero_1)
+        session.add(hero_2)
+        session.add(hero_3)
+
+        session.commit()
+
+
+def select_heroes():
+    with Session(engine) as session:
+        statement = select(Hero)
+        results = session.exec(statement)
+        for hero in results:
+            print(hero)
+
+
+def select_heroes():
+    with Session(engine) as session:
+        statement = select(Hero)
+        results = session.exec(statement)
+        heroes = results.all()
+        print(heroes)
+        # for hero in heroes:
+        #     print(hero)
+
+
+def main():
+    create_db_and_tables()
+    create_heroes()
+    select_heroes()
+
+
+if __name__ == "__main__":
+    main()
